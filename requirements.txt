@@ -1,0 +1,2 @@
+requests
+progressbar==2.2
