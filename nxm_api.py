@@ -49,10 +49,11 @@ def session_id(user, passwd):
         return None
 
 def _download_to_stream(sid, url, fp, update_function):
+    headers = {'User-Agent':NEXUS_CLIENT_VERSION}
     cookies = None
     if sid:
         cookies = {'sid':sid}
-    r = requests.get(url, stream=True, cookies=cookies)
+    r = requests.get(url, stream=True, cookies=cookies, headers=headers)
     total_written = 0
     for chunk in r.iter_content():
         if chunk:

@@ -4,7 +4,10 @@ import os
 import shutil
 import time
 import logging
+import select
+import socket
 
+from threading import Thread
 from functools import partial
 
 import requests
@@ -32,6 +35,7 @@ def _download_and_check_file(session_id, download_location, game, game_id, file_
     file_details = nxm_api.req_file_details(game, game_id, file_id)
     download_url = get_dl_url(game, game_id, file_id)
 
+    print(file_details['name'])
     expected_size_bytes = file_details['size']*1024
     widgets = [progressbar.Bar('=', '[', ']'),
                ' ',
@@ -93,21 +97,62 @@ def download_mod(game, game_id, file_id):
         with open('data.json', 'w') as json_fp:
             json.dump(user_data, json_fp)
 
+class SocketListener(Thread):
 
-#download_mod_file('skyrim', '110', '98915')
-download_mod('skyrim', '110', '1000035623')
-#download_mod_file('skyrim', '110', '1000018824')
-#print nxm_api.req_file_details('skyrim', '110', '1000018824')
+    def __init__(self, queue, address):
+        self._queue = queue
+        self._address = address
+        self._stop = False
+        super(SocketListener, self).__init__()
 
-#download_mod_file('skyrim', '110', '1000023481')
-#print nxm_api.req_file_details('skyrim', '110', '1000023481')
+    def stop(self):
+        self._stop = True
 
+    def run(self):
+        soc = socket.socket(socket.AF_INET)
+        soc.bind(self._address)
+        soc.listen(5)
 
-#if __name__ == '__main__':
-#    arg = sys.argv[1]
-#
-#    arg = arg.strip('/')
-#    _, _, mod_id, _, file_id = arg.split('/')
+        read_list = [soc]
+        while not self._stop:
+            readable, writable, errored = select.select(read_list, [], [], 0.1)
+            for s in readable:
+                if s is soc:
+                    client_socket, address = soc.accept()
+                    read_list.append(client_socket)
+                    logging.debug('Socket got connection from <%s, %d>' % address)
+                else:
+                    data = s.recv(1024)
+                    if data:
+                        logging.debug('Socket read <%s>' % data)
+                        self._queue.append(data.split('\t'))
+                    else:
+                        logging.debug('Socket closed')
+                        s.close()
+                        read_list.remove(s)
+        soc.close()
 
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
 
+    data = sys.argv[1]
+    data = data.strip('/')
+    _, _, mod_id, _, file_id = data.split('/')
 
+    address = ('localhost', 6004)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.connect(address)
+        sock.send('\t'.join(('skyrim', '110', file_id)))
+        sock.close()
+    except socket.error:
+        queue = [('skyrim', '110', file_id)]
+        listener = SocketListener(queue, address)
+
+        try:
+            listener.start()
+            while queue:
+                game, game_id, file_id = queue.pop()
+                download_mod(game, game_id, file_id)
+        finally:
+            listener.stop()
