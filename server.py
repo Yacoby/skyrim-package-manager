@@ -59,3 +59,4 @@ def server_static(filepath):
 
 logging.basicConfig(level=logging.DEBUG)
 run(host='localhost', port=8080)
+download_manager.stop()
