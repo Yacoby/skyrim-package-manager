@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en" ng-app="skyrimPackageManagerApp">
+<head>
+    <meta charset="utf-8">
+    <title>Skyrim Package Manager</title>
+    <link rel="stylesheet" href="static/css/bootstrap.css">
+    <script src="static/lib/angular.js"></script>
+    <script src="static/controller.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>Skryim Package Manager</h1>
+
+    <div  ng-controller="InfoCtrl">
+        <p>
+            Downloaded mods saved to: {{data.save_location}}
+        </p>
+
+        <span ng-if="data.password_set==false || data.username_set==false" class="animate-if">
+            Username and/or password is not set
+        </span>
+    </div>
+
+    <h3>Current Downloads</h3>
+    <table class="table" ng-controller="DlCtrl">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Size</th>
+                <th>Progress</th>
+                <th>Speed</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="mod in downloading">
+                <td>{{mod.file_name}}</td>
+                <td>{{mod.file_size_kb}}kb</td>
+                <td>{{(mod.total_downloaded_kb / mod.file_size_kb * 100).toFixed(1)}}%</td>
+                <td>?</td>
+                <td><a href="#">Cancel</a></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Downloaded</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Version</th>
+                <th>Current Version</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="mod in downloading">
+                <td>{{mod.file_name}}</td>
+                <td>?</td>
+                <td>?</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
