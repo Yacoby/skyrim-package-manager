@@ -4,6 +4,7 @@ import json
 import os
 
 from downloader import DownloadManager
+from nxm_register import register_nxm_handler, is_nxm_registered
 
 with open('cfg.json') as json_fp:
     cfg = json.load(json_fp)
@@ -42,8 +43,13 @@ def status():
     }
 
 @route('/nxm')
-def nxm_details(name):
-    return {'registered':True}
+def nxm_details():
+    return {'registered':is_nxm_registered()}
+
+@route('/nxm/register')
+def nxm_register():
+    register_nxm_handler()
+    return nxm_details()
 
 @route('/stop')
 def stop(name):

@@ -13,11 +13,18 @@
 
     <div  ng-controller="InfoCtrl">
         <p>
-            Downloaded mods saved to: {{data.save_location}}
+            Downloaded mods saved to: {{cfg.save_location}}
         </p>
 
-        <span ng-if="data.password_set==false || data.username_set==false" class="animate-if">
+        <span ng-if="cfg.password_set==false || cfg.username_set==false" class="animate-if">
             Username and/or password is not set
+        </span>
+
+        <span ng-if="nxm.registered == false" class="animate-if">
+            <button ng-click="register_nxm();">Register NXM handler</button>
+        </span>
+        <span ng-if="nxm.registered" class="animate-if">
+            NXM Handler registered to this application
         </span>
     </div>
 
