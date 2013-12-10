@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
         try:
             req = requests.get('%s/status' % addr)
-            req = requests.post('%s/download/%s/%s/%s' % (addr, game, game_id, file_id))
+            req = requests.post('%s/download/%s/%s/%s/%s' % (addr, game, game_id, mod_id, file_id))
         except requests.exceptions.ConnectionError:
             s = Server()
             s.start_download(game, game_id, mod_id, file_id)

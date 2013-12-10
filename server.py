@@ -1,4 +1,4 @@
-from bottle import route, run, static_file, install
+from bottle import route, post, run, static_file, install
 import logging
 import json
 import os
@@ -17,7 +17,7 @@ def downloading():
         data.append(dl.raw_data())
     return {'active_downloads':data}
 
-@route('/download/<game>/<game_id>/<mod_id>/<file_id>')
+@post('/download/<game>/<game_id>/<mod_id>/<file_id>')
 def download(game, game_id, mod_id, file_id):
     download_manager.download(game, game_id, mod_id, file_id)
     return {}
@@ -98,9 +98,11 @@ class Server(object):
         Called if we haven't had a heartbeat in a while
         '''
         if any(self._download_manager.get_downloading()):
+            logging.debug('No heartbeat but downloading.... Still alive')
             heartbeat.beat()
         else:
-            self._server.shutdown()
+            logging.debug('No heartbeat, no downloads. Stopping...')
+            self._server.stop()
 
     def start_download(self, game, game_id, mod_id, file_id):
         self._download_manager.download(game, game_id, mod_id, file_id)

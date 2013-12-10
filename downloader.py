@@ -7,7 +7,10 @@ import os
 
 import nxm_api
 
-MAX_BACKOFF_SECONDS = 60
+MAX_BACKOFF_SECONDS = 120
+DOWNLOAD_TIMEOUT = 5
+MAX_ATTEMPTS = 20
+DOWNLOAD_CHUNK_SIZE = 8192
 
 class Download(object):
     '''
@@ -27,7 +30,7 @@ class Download(object):
         self._finished = False
 
         self._attempts = 0
-        self._max_attempts = 5
+        self._max_attempts = MAX_ATTEMPTS
         self._login_requried = False
 
         self._bad_urls = set()
@@ -92,7 +95,8 @@ class Download(object):
         req = requests.get(self._url,
                            headers=self._headers,
                            cookies=self._cookies,
-                           stream=True)
+                           stream=True,
+                           timeout=DOWNLOAD_TIMEOUT)
         logging.debug('Connection made...')
 
         (os_level_fp, pathname) = tempfile.mkstemp()
@@ -106,7 +110,7 @@ class Download(object):
 
     def _download_to_stream(self, request, fp):
         self._current_downloaded = 0
-        for chunk in request.iter_content():
+        for chunk in request.iter_content(DOWNLOAD_CHUNK_SIZE):
             if chunk:
                 fp.write(chunk)
                 self._current_downloaded += len(chunk)
@@ -170,6 +174,3 @@ class DownloadManager(object):
 
     def get_done(self):
         return (dl for dl in self._downloads if dl.finished())
-
-    def get_errors(self):
-        pass
