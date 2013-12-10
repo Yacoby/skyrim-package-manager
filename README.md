@@ -14,9 +14,8 @@ Install virtualenv and pip then run the following:
     $ pip install -r requirements.txt
     $ python server.py
 
-Open [http://localhost:8080](http://localhost:8080) and add the nxm handler using the button
+When finished you can exit the virtual environment using (or just close the terminal):
 
-    $ ^C
     $ deactive
 
 Downloading nxms should now work on Linux and while downloading [http://localhost:8080](http://localhost:8080) can be used to view the download progress
@@ -31,9 +30,7 @@ Key:
 ###Roadmap:
 
 0:
-* Fix NXM support
 * Auto shutdown when all downloads are finished
-* Windows support (ideally some form of exe?)
 
 1:
 * Auto download depenecies

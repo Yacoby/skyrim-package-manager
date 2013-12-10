@@ -31,6 +31,10 @@ def status():
         'save_location':cfg['download_location'],
     }
 
+@route('/shutdown')
+def shutdown():
+    server.stop()
+
 @route('/nxm')
 def nxm_details():
     return {'registered':is_nxm_registered()}
@@ -48,9 +52,6 @@ def index():
 def server_static(filepath):
     return static_file(filepath, root='gui/')
 
-@route('/shutdown')
-def shutdown():
-    server.stop()
 
 def local_variable_plugin(to_inject, callback):
     def wrapper(*args, **kwargs):
@@ -73,38 +74,41 @@ def local_variable_plugin(to_inject, callback):
 
     return wrapper
 
+class Server(object):
+    def __init__(self):
+        with open('cfg.json') as json_fp:
+            self._cfg = cfg = json.load(json_fp)
+        cfg['download_location'] = os.path.abspath(os.path.expanduser(cfg.get('download_location', '')))
 
-with open('cfg.json') as json_fp:
-    cfg = json.load(json_fp)
-cfg['download_location'] = os.path.abspath(os.path.expanduser(cfg.get('download_location', '')))
+        try:
+            with open('data.json') as json_fp:
+                user_data = json.load(json_fp)
+        except IOError:
+            logging.warning('No user data')
+            user_data = {}
 
-try:
-    with open('data.json') as json_fp:
-        user_data = json.load(json_fp)
-except IOError:
-    logging.warning('No user data')
-    user_data = {}
+        self._download_manager = DownloadManager(cfg['user'],
+                                                 cfg['password'],
+                                                 user_data.get('session_id'))
 
-download_manager = DownloadManager(cfg['user'],
-                                   cfg['password'],
-                                   user_data.get('session_id'))
+    def start_download(self, game, game_id, mod_id, file_id):
+        download_manager.download(game, game_id, mod_id, file_id)
 
-logging.basicConfig(level=logging.DEBUG)
+    def start_server(self, host, port):
+        server = StoppableWSGIRefServer(host=host, port=port)
 
+        hb = Heartbeat()
+        install(partial(local_variable_plugin, {
+            'cfg':self._cfg,
+            'heartbeat': hb,
+            'server' : server,
+            'download_manager' : self._download_manager,
+        }))
 
-server = StoppableWSGIRefServer(host='localhost', port=8080)
+        hb_monitor = HeartbeatMonitor(hb, 10, server.stop)
+        hb_monitor.monitor()
 
-hb = Heartbeat()
-install(partial(local_variable_plugin, {
-    'heartbeat': hb,
-    'server' : server,
-}))
+        run(server=server)
 
-
-hb_monitor = HeartbeatMonitor(hb, 10, server.stop)
-hb_monitor.monitor()
-
-run(server=server)
-
-download_manager.stop()
-hb_monitor.stop()
+        self._download_manager.stop()
+        hb_monitor.stop()
