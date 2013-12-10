@@ -16,7 +16,8 @@ class Download(object):
     '''
     Yay. This seems to do all the things
     '''
-    def __init__(self, details, game, game_id, file_id, cookies):
+    def __init__(self, on_done_f, details, game, game_id, file_id, cookies):
+        self._on_done_f = on_done_f
         self._details = details
 
         self._game = game
@@ -99,6 +100,7 @@ class Download(object):
 
             logging.debug('Downloaded a file')
             self._finished = True
+            self._on_done_f(download_path, self._details['uri'])
 
     def _download_to_tmp(self):
         logging.debug('Downloading to temp file')
@@ -147,12 +149,13 @@ class DownloadManager(object):
     def stop(self):
         self._stop_event.set()
 
-    def download(self, game, game_id, mod_id, file_id):
+    def download(self, on_done_f, game, game_id, mod_id, file_id):
         logging.debug('Request to download file <%s> from mod <%s>' % (file_id, mod_id))
         file_details = nxm_api.get_file_details(game, game_id, file_id)
         print file_details
 
-        dl = Download(file_details,
+        dl = Download(on_done_f,
+                      file_details,
                       game,
                       game_id,
                       file_id,

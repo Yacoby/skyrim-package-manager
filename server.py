@@ -107,8 +107,21 @@ class Server(object):
             logging.debug('No heartbeat, no downloads. Stopping...')
             self._server.stop()
 
+    def _on_dl_finished(self, path, file_name):
+        '''
+        TODO this needs sorting
+        '''
+        import shutil
+        save_path = os.path.join(self._cfg['download_location'], file_name)
+        logging.debug('Moving <%s> to <%s>' % (path, save_path,))
+        shutil.move(path, save_path)
+
     def start_download(self, game, game_id, mod_id, file_id):
-        self._download_manager.download(game, game_id, mod_id, file_id)
+        self._download_manager.download(self._on_dl_finished,
+                                        game,
+                                        game_id,
+                                        mod_id,
+                                        file_id)
 
     def start_server(self, host, port):
         self._server = server = StoppableWSGIRefServer(host=host, port=port)
