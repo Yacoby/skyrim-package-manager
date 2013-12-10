@@ -35,5 +35,5 @@ class HeartbeatMonitor(object):
     def _monitor(self, evt):
         while not evt.is_set():
             if self._heartbeat.seconds_since_last_beat() > self._timeout:
-                self._on_timeout_f()
+                self._on_timeout_f(self._heartbeat)
             time.sleep(2)

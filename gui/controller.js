@@ -10,6 +10,11 @@ app.controller('DlCtrl', ['$scope', '$http', '$timeout', function ($scope, $http
 }]);
 
 app.controller('InfoCtrl', ['$scope', '$http', '$timeout', function ($scope, $http, $timeout) {
+    (function poll() {
+        $http.get('/heartbeat');
+        $timeout(poll, 5000);
+    })();
+
     var loadNxmData = function(){
         $http.get('/nxm').success(function(data){
             $scope.nxm = data;

@@ -75,6 +75,8 @@ def local_variable_plugin(to_inject, callback):
     return wrapper
 
 class Server(object):
+    SHUTDOWN_TIMEOUT = 60
+
     def __init__(self):
         with open('cfg.json') as json_fp:
             self._cfg = cfg = json.load(json_fp)
@@ -91,11 +93,20 @@ class Server(object):
                                                  cfg['password'],
                                                  user_data.get('session_id'))
 
+    def _on_heartbeat_timeout(self, heartbeat):
+        '''
+        Called if we haven't had a heartbeat in a while
+        '''
+        if any(self._download_manager.get_downloading()):
+            heartbeat.beat()
+        else:
+            self._server.shutdown()
+
     def start_download(self, game, game_id, mod_id, file_id):
         self._download_manager.download(game, game_id, mod_id, file_id)
 
     def start_server(self, host, port):
-        server = StoppableWSGIRefServer(host=host, port=port)
+        self._server = server = StoppableWSGIRefServer(host=host, port=port)
 
         hb = Heartbeat()
         install(partial(local_variable_plugin, {
@@ -105,7 +116,7 @@ class Server(object):
             'download_manager' : self._download_manager,
         }))
 
-        hb_monitor = HeartbeatMonitor(hb, 10, server.stop)
+        hb_monitor = HeartbeatMonitor(hb, self.SHUTDOWN_TIMEOUT, self._on_heartbeat_timeout)
         hb_monitor.monitor()
 
         run(server=server)
