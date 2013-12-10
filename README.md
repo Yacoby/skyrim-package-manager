@@ -30,7 +30,9 @@ Key:
 ###Roadmap:
 
 0:
-* Auto shutdown when all downloads are finished
+* Move files to their correct location
+* Windows binary
+* Better logging
 
 1:
 * Auto download depenecies
