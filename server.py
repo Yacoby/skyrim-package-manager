@@ -20,10 +20,13 @@ def downloading():
         data.append(dl.raw_data())
     return {'active_downloads':data}
 
+@route('/cancel_download/<dl_id>')
+def cancel_download(dl_id):
+    download_manager.stop_download(int(dl_id))
+
 @post('/download/<game>/<game_id>/<mod_id>/<file_id>')
 def download(game, game_id, mod_id, file_id):
     download_manager.download(game, game_id, mod_id, file_id)
-    return {}
 
 @route('/status')
 def status():

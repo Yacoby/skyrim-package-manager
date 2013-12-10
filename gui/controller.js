@@ -7,6 +7,11 @@ app.controller('DlCtrl', ['$scope', '$http', '$timeout', function ($scope, $http
         })
         $timeout(poll, 1000);
     })();
+
+    $scope.cancel = function(id){
+        $http.get('/cancel_download/' + id)
+    }
+
 }]);
 
 app.controller('InfoCtrl', ['$scope', '$http', '$timeout', function ($scope, $http, $timeout) {

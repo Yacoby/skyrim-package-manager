@@ -16,7 +16,10 @@ class Download(object):
     '''
     Yay. This seems to do all the things
     '''
-    def __init__(self, on_done_f, details, game, game_id, file_id, cookies):
+    def __init__(self, on_done_f, dl_id, details, game, game_id, file_id, cookies):
+        self._dl_id = dl_id
+        self._stop_event = threading.Event()
+
         self._on_done_f = on_done_f
         self._details = details
 
@@ -38,6 +41,9 @@ class Download(object):
 
         self._url, self._headers = self._get_download_url_headers()
 
+    def stop(self):
+        self._stop_event.set()
+
     def _get_download_url_headers(self):
         return nxm_api.get_download_url_headers(self._game,
                                                 self._game_id,
@@ -46,6 +52,9 @@ class Download(object):
 
     def finished(self):
         return self._finished
+
+    def downloading(self):
+        return not self.finished() and not self._stop_event.is_set()
 
     def login_required(self):
         return self._login_requried
@@ -59,6 +68,9 @@ class Download(object):
     def download(self):
         backoff = 2
         while self._attempts < self._max_attempts and not self.finished():
+            if self._stop_event.is_set():
+                logging.debug('<%d> Stop event set' % self._dl_id)
+                break
 
             if self.login_required():
                 logging.debug('Waiting for login')
@@ -123,16 +135,20 @@ class Download(object):
     def _download_to_stream(self, request, fp):
         self._current_downloaded = 0
         for chunk in request.iter_content(DOWNLOAD_CHUNK_SIZE):
+            if self._stop_event.is_set():
+                break
             if chunk:
                 fp.write(chunk)
                 self._current_downloaded += len(chunk)
 
     def raw_data(self):
         return {
-                'file_name': self._details['name'],
+                'id': self._dl_id,
+                'name': self._details['name'],
                 'url': self._url,
                 'file_size_kb': self._details['size'],
                 'total_downloaded_kb': self._current_downloaded/1024,
+                'attempt': self._attempts,
         }
 
 
@@ -141,20 +157,26 @@ class DownloadManager(object):
         self._user = user
         self._passwd = passwd
         self._session_id = session_id
-        self._downloads = []
+        self._downloads = {}
 
         self._stop_event = threading.Event()
+        self._next_dl_id = 0
         threading.Thread(target=self.login_monitor, args=(self._stop_event,)).start()
 
     def stop(self):
         self._stop_event.set()
+        for dl in self.get_downloading():
+            dl.stop()
+
+    def stop_download(self, dl_id):
+        self._downloads[dl_id].stop()
 
     def download(self, on_done_f, game, game_id, mod_id, file_id):
         logging.debug('Request to download file <%s> from mod <%s>' % (file_id, mod_id))
         file_details = nxm_api.get_file_details(game, game_id, file_id)
-        print file_details
 
         dl = Download(on_done_f,
+                      self._next_dl_id,
                       file_details,
                       game,
                       game_id,
@@ -162,13 +184,14 @@ class DownloadManager(object):
                       {'sid':self._session_id})
         thread = threading.Thread(target=dl.download)
         thread.start()
-        self._downloads.append(dl)
+        self._downloads[self._next_dl_id] = dl
+        self._next_dl_id += 1
 
     def login_monitor(self, stop_event):
         while not stop_event.is_set():
             time.sleep(0.5)
 
-            login_req = any(dl for dl in self._downloads if dl.login_required())
+            login_req = any(dl for dl in self.get_downloading() if dl.login_required())
             if not login_req:
                 continue
             logging.debug('Thread with login required flag set')
@@ -176,6 +199,7 @@ class DownloadManager(object):
             if not nxm_api.is_session_id_valid(self._session_id):
                 logging.debug('Session id is invalid, logging in')
                 self._session_id = nxm_api.session_id(self._user, self._passwd)
+                logging.debug('New session id is ' % self._session_id)
                 #TODO it isn't clear if login fails
 
             for dl in self.get_downloading():
@@ -183,7 +207,7 @@ class DownloadManager(object):
                 dl.set_login_required(False)
 
     def get_downloading(self):
-        return (dl for dl in self._downloads if not dl.finished())
+        return (dl for dl in self._downloads.values() if dl.downloading())
 
     def get_done(self):
-        return (dl for dl in self._downloads if dl.finished())
+        return (dl for dl in self._downloads.values() if dl.finished())
