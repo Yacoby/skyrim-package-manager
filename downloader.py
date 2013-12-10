@@ -77,20 +77,25 @@ class Download(object):
                 continue
 
             download_size_bytes = os.path.getsize(download_path)
+
+            #The +1 is as I think the rounding is different on the nexus (ceiling?).
+            #It may be worth looking into if I can calculate this better
+            upper_bound_expected_kb = int(download_size_bytes/1024 + 1)
+
             if download_size_bytes == 0:
                 logging.debug('Zero file size. Backoff is <%d>' % backoff)
                 time.sleep(backoff)
                 backoff = min(backoff * 2, MAX_BACKOFF_SECONDS)
                 continue
-            elif download_size_bytes/1024 < self._expected_size_kb: 
+            elif upper_bound_expected_kb < self._expected_size_kb:
                 logging.debug('Low file size. Got <%d>, expected <%d>. Login required?' %
-                              (int(download_size_bytes/1024), self._expected_size_kb,))
+                              (upper_bound_expected_kb, self._expected_size_kb,))
                 self._login_requried = True
                 continue
 
             #TODO
             #look at output and check it is as expected. Basically that it doesn't
-            #have html in it...
+            #have html in it... as this seems to be the case if there is errors
 
             logging.debug('Downloaded a file')
             self._finished = True
