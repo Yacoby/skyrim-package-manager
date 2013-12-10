@@ -12,9 +12,9 @@ Install virtualenv and pip then run the following:
     $ virtualenv env
     $ source env/bin/activate
     $ pip install -r requirements.txt
-    $ python server.py
+    $ python main.py
 
-When finished you can exit the virtual environment using (or just close the terminal):
+Use the button to set the NXM handler. When finished you can exit the virtual environment using (or just close the terminal):
 
     $ deactive
 
@@ -30,13 +30,12 @@ Key:
 ###Roadmap:
 
 0:
-* Move files to their correct location
 * Windows binary
 * Better logging
 
 1:
 * Auto download depenecies
-* Ability to run the app through some other means
+* Setting config options from the GUI
 
 2+:
 * Version tracking
