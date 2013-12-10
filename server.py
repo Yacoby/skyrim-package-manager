@@ -10,6 +10,9 @@ from nxm_register import register_nxm_handler, is_nxm_registered
 from server_adapter import StoppableWSGIRefServer
 from server_heartbeat import HeartbeatMonitor, Heartbeat
 
+ROOT_PATH = os.path.dirname(__file__)
+GUI_DATA_PATH = os.path.join(ROOT_PATH, 'gui')
+
 @route('/downloading')
 def downloading():
     data = []
@@ -46,11 +49,11 @@ def nxm_register():
 
 @route('/')
 def index():
-    return static_file('index.html', root='gui/')
+    return static_file('index.html', root=GUI_DATA_PATH)
 
 @route('/static/<filepath:path>')
 def server_static(filepath):
-    return static_file(filepath, root='gui/')
+    return static_file(filepath, root=GUI_DATA_PATH)
 
 
 def local_variable_plugin(to_inject, callback):
@@ -78,12 +81,12 @@ class Server(object):
     SHUTDOWN_TIMEOUT = 60
 
     def __init__(self):
-        with open('cfg.json') as json_fp:
+        with open(os.path.join(ROOT_PATH, 'cfg.json')) as json_fp:
             self._cfg = cfg = json.load(json_fp)
         cfg['download_location'] = os.path.abspath(os.path.expanduser(cfg.get('download_location', '')))
 
         try:
-            with open('data.json') as json_fp:
+            with open(os.path.join(ROOT_PATH, 'data.json')) as json_fp:
                 user_data = json.load(json_fp)
         except IOError:
             logging.warning('No user data')

@@ -24,7 +24,7 @@ class Download(object):
         self._file_id = file_id
 
         self._cookies = cookies
-        self._expected_size_kb = self._details['size']
+        self._expected_size_kb = int(self._details['size'])
 
         self._current_downloaded = 0
         self._finished = False
@@ -76,16 +76,21 @@ class Download(object):
                 backoff = min(backoff * 2, MAX_BACKOFF_SECONDS)
                 continue
 
-            if os.path.getsize(download_path) == 0:
+            download_size_bytes = os.path.getsize(download_path)
+            if download_size_bytes == 0:
                 logging.debug('Zero file size. Backoff is <%d>' % backoff)
                 time.sleep(backoff)
                 backoff = min(backoff * 2, MAX_BACKOFF_SECONDS)
                 continue
-            elif os.path.getsize(download_path)/1024 < self._expected_size_kb:
+            elif download_size_bytes/1024 < self._expected_size_kb: 
+                logging.debug('Low file size. Got <%d>, expected <%d>. Login required?' %
+                              (int(download_size_bytes/1024), self._expected_size_kb,))
                 self._login_requried = True
-                logging.debug('Low file size. Login required?')
-                #TODO I think we need a better detection method than this.
                 continue
+
+            #TODO
+            #look at output and check it is as expected. Basically that it doesn't
+            #have html in it...
 
             logging.debug('Downloaded a file')
             self._finished = True
