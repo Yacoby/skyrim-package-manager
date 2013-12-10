@@ -36,7 +36,7 @@ if __name__ == '__main__':
         mod_id, file_id = parse_nxm(sys.argv[1])
 
         game = 'skyrim'
-        game_id = '101'
+        game_id = '110'
 
         try:
             req = requests.get('%s/status' % addr)

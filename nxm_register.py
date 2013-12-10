@@ -2,11 +2,10 @@ import os
 import sys
 import platform
 import subprocess
-import shlex
 
 NXM_DESKTOP_NAME = 'nxm.desktop'
 
-MAIN_PYTHON_FILE = 'handle_nxm.py'
+MAIN_PYTHON_FILE = 'main.py'
 
 def _get_run_cmd():
     return sys.executable + ' ' + os.path.join(os.getcwd(), MAIN_PYTHON_FILE)

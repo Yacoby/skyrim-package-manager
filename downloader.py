@@ -136,6 +136,7 @@ class DownloadManager(object):
     def download(self, game, game_id, mod_id, file_id):
         logging.debug('Request to download file <%s> from mod <%s>' % (file_id, mod_id))
         file_details = nxm_api.get_file_details(game, game_id, file_id)
+        print file_details
 
         dl = Download(file_details,
                       game,

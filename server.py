@@ -92,7 +92,7 @@ class Server(object):
                                                  user_data.get('session_id'))
 
     def start_download(self, game, game_id, mod_id, file_id):
-        download_manager.download(game, game_id, mod_id, file_id)
+        self._download_manager.download(game, game_id, mod_id, file_id)
 
     def start_server(self, host, port):
         server = StoppableWSGIRefServer(host=host, port=port)
