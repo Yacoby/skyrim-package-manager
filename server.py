@@ -84,9 +84,17 @@ class Server(object):
     SHUTDOWN_TIMEOUT = 60
 
     def __init__(self):
-        with open(os.path.join(ROOT_PATH, 'cfg.json')) as json_fp:
-            self._cfg = cfg = json.load(json_fp)
-        cfg['download_location'] = os.path.abspath(os.path.expanduser(cfg.get('download_location', '')))
+        try:
+            with open(os.path.join(ROOT_PATH, 'cfg.json')) as json_fp:
+                self._cfg = cfg = json.load(json_fp)
+            self._cfg['download_location'] = os.path.abspath(os.path.expanduser(cfg.get('download_location', '')))
+        except IOError:
+            logging.warning('No user config')
+            self._cfg = {
+                    'download_location' : os.path.expanduser('~'),
+                    'user' : '',
+                    'password' : '',
+            }
 
         try:
             with open(os.path.join(ROOT_PATH, 'data.json')) as json_fp:
@@ -95,8 +103,8 @@ class Server(object):
             logging.warning('No user data')
             user_data = {}
 
-        self._download_manager = DownloadManager(cfg['user'],
-                                                 cfg['password'],
+        self._download_manager = DownloadManager(self._cfg['user'],
+                                                 self._cfg['password'],
                                                  user_data.get('session_id'))
 
     def _on_heartbeat_timeout(self, heartbeat):

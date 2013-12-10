@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import sys
 import re
 import logging
@@ -51,6 +52,8 @@ if __name__ == '__main__':
             req = requests.get(status_uri)
             webbrowser.open(addr)
         except requests.exceptions.ConnectionError:
-            threading.Thread(target=open_when_running,
-                             args=(status_uri, addr,)).start()
+            t = threading.Thread(target=open_when_running,
+                                 args=(status_uri, addr,))
+            t.daemon = True
+            t.start()
             Server().start_server(host, port)

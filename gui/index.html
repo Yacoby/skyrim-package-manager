@@ -20,12 +20,12 @@
             Username and/or password is not set
         </span>
 
-        <span ng-if="nxm.registered == false" class="animate-if">
+        <div ng-if="nxm.registered == false" class="animate-if">
             <button ng-click="register_nxm();">Register NXM handler</button>
-        </span>
-        <span ng-if="nxm.registered" class="animate-if">
+        </div>
+        <div ng-if="nxm.registered" class="animate-if">
             NXM Handler registered to this application
-        </span>
+        </div>
     </div>
 
     <h3>Current Downloads</h3>
