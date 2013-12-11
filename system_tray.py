@@ -18,7 +18,7 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
         self.activated.connect(self._on_click)
         menu = QtGui.QMenu(parent)
 
-        exitAction = QtGui.QAction("&Exit", self, triggered=QtGui.qApp.quit)
+        exitAction = QtGui.QAction("&Exit", self, triggered=self._on_exit_clicked)
         menu.addAction(exitAction)
 
         self.setContextMenu(menu)
@@ -31,9 +31,13 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
         self._shutdown_timer.timeout.connect(self._check_shutdown)
         self._shutdown_timer.start(RUNNING_CHECK * 1000)
 
+    def _on_exit_clicked(self):
+        requests.get('%s/shutdown' % self._base_addr)
+        QtGui.qApp.quit()
+
     def _check_shutdown(self):
         try:
-            req = requests.get('%s/status' % self._base_addr)
+            requests.get('%s/status' % self._base_addr)
             self._shutdown_ticker = 0
         except requests.exceptions.ConnectionError:
             self._shutdown_ticker += 1

@@ -26,8 +26,8 @@ def open_when_running(query_url, open_url):
     '''
     while True:
         try:
-            requests.get('%s/status' % addr)
-            webbrowser.open(addr)
+            requests.get(query_url)
+            webbrowser.open(open_url)
             break
         except requests.exceptions.ConnectionError:
             time.sleep(0.5)
@@ -45,6 +45,7 @@ if __name__ == '__main__':
     port = 8080
 
     addr = 'http://%s:%d' % (host, port)
+    status_uri = '%s/status' % addr
     if len(sys.argv) > 1:
         mod_id, file_id = parse_nxm(sys.argv[1])
 
@@ -52,7 +53,7 @@ if __name__ == '__main__':
         game_id = '110'
 
         try:
-            req = requests.get('%s/status' % addr)
+            req = requests.get(status_uri)
             req = requests.post('%s/download/%s/%s/%s/%s' % (addr, game, game_id, mod_id, file_id))
         except requests.exceptions.ConnectionError:
             p = multiprocessing.Process(target=system_tray_app, args=(addr,))
@@ -62,7 +63,6 @@ if __name__ == '__main__':
             s.start_server(host, port)
             p.terminate()
     else:
-        status_uri = '%s/status' % addr
         try:
             req = requests.get(status_uri)
             webbrowser.open(addr)
