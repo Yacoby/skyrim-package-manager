@@ -3,6 +3,11 @@ import sys
 import platform
 import subprocess
 
+try:
+    import _winreg as winreg
+except ImportError:
+    pass
+
 NXM_DESKTOP_NAME = 'nxm.desktop'
 
 MAIN_PYTHON_FILE = 'main.py'
@@ -29,10 +34,21 @@ Exec=''')
 
     os.system('xdg-mime default %s x-scheme-handler/nxm' % NXM_DESKTOP_NAME)
 
+def _register_nxm_handler_windows():
+    reg = winreg.ConnectRegistry(None, winreg.HKEY_CLASSES_ROOT)
+    with winreg.OpenKey(reg, r'nxm/URL Protocol', 0, winreg.KEY_SET_VALUE) as k:
+        winreg.SetValue(reg, k, winreg.REG_SZ, '')
+
+    with winreg.OpenKey(reg, r'nxm/DefaultIcon', 0, winreg.KEY_SET_VALUE) as k:
+        winreg.SetValue(reg, k, winreg.REG_SZ, '')
+
+    with winreg.OpenKey(reg, r'nxm/shell/open/command/', 0, winreg.KEY_SET_VALUE) as k:
+        winreg.SetValue(reg, k, winreg.REG_SZ, '"%s" "%%1"' % _get_run_cmd)
+
 def register_nxm_handler():
     f = {
             'Linux' : _register_nxm_handler_linux,
-            #'Windows' : _register_nxm_handler_windows,
+            'Windows' : _register_nxm_handler_windows,
     }
     f[platform.system()]()
 
@@ -53,9 +69,12 @@ def _is_nxm_registered_linux():
     except IOError:
         return False
 
+def _is_nxm_registered_windows():
+    return False
+
 def is_nxm_registered():
     f = {
             'Linux' : _is_nxm_registered_linux,
-            #'Windows' : _register_nxm_handler_windows,
+            'Windows' : _register_nxm_handler_windows,
     }
     return f[platform.system()]()
