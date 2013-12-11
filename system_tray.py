@@ -31,6 +31,8 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
         self._shutdown_timer.timeout.connect(self._check_shutdown)
         self._shutdown_timer.start(RUNNING_CHECK * 1000)
 
+        self._shutdown_ticker = 0
+
     def _on_exit_clicked(self):
         requests.get('%s/shutdown' % self._base_addr)
         QtGui.qApp.quit()

@@ -119,7 +119,7 @@ def _path_to_abs(path):
     >>> os.path.relpath(p, os.path.expanduser('~'))
     'mods'
     '''
-    
+
     if not os.path.isabs(path):
         path = os.path.expanduser(path)
         if not os.path.isabs(path):

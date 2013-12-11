@@ -53,17 +53,26 @@ if __name__ == '__main__':
                         action='store_const',
                         const=True,
                         default=False)
+    parser.add_argument('--tray',
+                        dest='tray',
+                        action='store_const',
+                        const=True,
+                        default=False)
     args = parser.parse_args()
+
+    host = 'localhost'
+    port = 8080
+    addr = 'http://%s:%d' % (host, port)
+    status_uri = '%s/status' % addr
 
     if args.regnxm:
         register_nxm_handler()
         sys.exit(0)
+    elif args.tray:
+        system_tray_app(addr)
+        sys.exit(0)
 
-    host = 'localhost'
-    port = 8080
 
-    addr = 'http://%s:%d' % (host, port)
-    status_uri = '%s/status' % addr
     if args.nxm:
         mod_id, file_id = parse_nxm(args.nxm)
 
