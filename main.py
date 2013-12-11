@@ -15,8 +15,7 @@ from server import Server
 from system_tray import system_tray_app
 
 def parse_nxm(nxm_str):
-    data = sys.argv[1]
-    data = re.sub(r'^nxm:', '', data)
+    data = re.sub(r'^nxm:', '', nxm_str)
     data = data.strip('/ ')
     _, _, mod_id, _, file_id = data.split('/')
     return mod_id, file_id

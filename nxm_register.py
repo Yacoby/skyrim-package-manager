@@ -4,9 +4,12 @@ import platform
 import subprocess
 
 try:
+    import win32com.shell.shell as shell
     import _winreg as winreg
 except ImportError:
     pass
+
+ASADMIN = 'asadmin'
 
 NXM_DESKTOP_NAME = 'nxm.desktop'
 
@@ -35,15 +38,11 @@ Exec=''')
     os.system('xdg-mime default %s x-scheme-handler/nxm' % NXM_DESKTOP_NAME)
 
 def _register_nxm_handler_windows():
-    reg = winreg.ConnectRegistry(None, winreg.HKEY_CLASSES_ROOT)
-    with winreg.OpenKey(reg, r'nxm/URL Protocol', 0, winreg.KEY_SET_VALUE) as k:
-        winreg.SetValue(reg, k, winreg.REG_SZ, '')
+    with winreg.CreateKeyEx(winreg.HKEY_CLASSES_ROOT, r'nxm\DefaultIcon', 0, winreg.KEY_WOW64_64KEY |  winreg.KEY_ALL_ACCESS) as k:
+        winreg.SetValue(winreg.HKEY_CLASSES_ROOT, r'nxm\DefaultIcon', winreg.REG_SZ, '')
 
-    with winreg.OpenKey(reg, r'nxm/DefaultIcon', 0, winreg.KEY_SET_VALUE) as k:
-        winreg.SetValue(reg, k, winreg.REG_SZ, '')
-
-    with winreg.OpenKey(reg, r'nxm/shell/open/command/', 0, winreg.KEY_SET_VALUE) as k:
-        winreg.SetValue(reg, k, winreg.REG_SZ, '"%s" "%%1"' % _get_run_cmd)
+    with winreg.CreateKeyEx(winreg.HKEY_CLASSES_ROOT, r'nxm\shell\open\command', 0, winreg.KEY_WOW64_64KEY |  winreg.KEY_ALL_ACCESS) as k:
+        winreg.SetValue(winreg.HKEY_CLASSES_ROOT, r'nxm\shell\open\command', winreg.REG_SZ, '"%s" "%%1"' % _get_run_cmd())
 
 def register_nxm_handler():
     f = {
@@ -78,3 +77,11 @@ def is_nxm_registered():
             'Windows' : _register_nxm_handler_windows,
     }
     return f[platform.system()]()
+
+if __name__ == '__main__':
+    if sys.argv[-1] != ASADMIN:
+        script = os.path.abspath(sys.argv[0])
+        params = ' '.join([script] + sys.argv[1:] + [ASADMIN])
+        shell.ShellExecuteEx(lpVerb='runas', lpFile=sys.executable, lpParameters=params)
+        sys.exit(0)
+    _register_nxm_handler_windows()
