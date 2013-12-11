@@ -3,6 +3,7 @@ import sys
 import re
 import os
 import logging
+import logging.handlers
 import webbrowser
 import time
 import threading
@@ -20,6 +21,9 @@ def parse_nxm(nxm_str):
     return mod_id, file_id
 
 def open_when_running(query_url, open_url):
+    '''
+    TODO this is terrible.
+    '''
     while True:
         try:
             requests.get('%s/status' % addr)
@@ -29,7 +33,13 @@ def open_when_running(query_url, open_url):
             time.sleep(0.5)
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
+    LOG_FILE = os.path.join(os.path.dirname(__file__), 'log')
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger()
+    logger.addHandler(logging.StreamHandler())
+    logger.addHandler(logging.handlers.RotatingFileHandler(
+        LOG_FILE, maxBytes=(1048576*5), backupCount=7
+    ))
 
     host = 'localhost'
     port = 8080

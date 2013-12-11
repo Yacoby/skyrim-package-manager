@@ -13,19 +13,34 @@
 
     <div  ng-controller="InfoCtrl">
         <p>
-            Downloaded mods saved to: {{cfg.save_location}}
+            Downloaded mods saved to: {{cfg.save_location}} <button ng-click="saveloc_edit=!saveloc_edit">Edit</button>
+            <div ng-if="saveloc_edit" class="animate-if">
+                <input name="input" ng-model="cfg.save_location_edit" required>
+                <button ng-click="updateSaveLocation()">Save</button>
+            </div>
         </p>
 
-        <span ng-if="cfg.password_set==false || cfg.username_set==false" class="animate-if">
-            Username and/or password is not set
-        </span>
+        <p>
+            <button ng-click="userpasss_edit=!userpasss_edit">Edit Username or Password</button>
+            <span ng-if="cfg.password_set==false || cfg.username_set==false" class="animate-if">
+                (Username and/or password is not set)
+            </span>
+            <div ng-if="userpasss_edit" class="animate-if">
+                <input name="input" ng-model="cfg.user" required>
+                <input name="input" type="password" ng-model="cfg.password" required>
+                <button ng-click="updateUserPass()">Save</button>
+                (Note: This data will be stored in plain text)
+            </div>
+        </p>
 
-        <div ng-if="nxm.registered == false" class="animate-if">
-            <button ng-click="register_nxm();">Register NXM handler</button>
-        </div>
-        <div ng-if="nxm.registered" class="animate-if">
-            NXM Handler registered to this application
-        </div>
+        <p>
+            <div ng-if="nxm.registered == false" class="animate-if">
+                <button ng-click="register_nxm();">Register NXM handler</button>
+            </div>
+            <div ng-if="nxm.registered" class="animate-if">
+                NXM Handler registered to this application
+            </div>
+        </p>
     </div>
 
     <h3>Current Downloads</h3>

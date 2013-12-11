@@ -27,6 +27,25 @@ app.controller('InfoCtrl', ['$scope', '$http', '$timeout', function ($scope, $ht
     };
     loadNxmData();
 
+    $scope.updateSaveLocation = function() {
+        $http({
+            url: '/set_cfg',
+            method:'POST',
+            data: {save_location:$scope.cfg.save_location_edit},
+        })
+        .success(function(){
+            $scope.cfg.save_location = $scope.cfg.save_location_edit
+            $scope.saveloc_edit = false;
+        });
+    };
+
+    $scope.updateUserPass = function() {
+        $http.post('/set_cfg', {'user':$scope.cfg.user, 'password':$scope.cfg.password})
+        .success(function(){
+            $scope.userpasss_edit = false;
+        });
+    };
+
     $scope.register_nxm = function() {
         $http.get('/nxm/register').success(function(){
             loadNxmData();
@@ -35,5 +54,6 @@ app.controller('InfoCtrl', ['$scope', '$http', '$timeout', function ($scope, $ht
 
     $http.get('/status').success(function(data){
         $scope.cfg = data;
+        $scope.cfg.save_location_edit = data.save_location;
     })
 }]);

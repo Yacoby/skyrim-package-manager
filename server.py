@@ -1,4 +1,4 @@
-from bottle import route, post, run, static_file, install
+from bottle import route, post, run, static_file, install, request
 import logging
 import json
 import os
@@ -12,6 +12,13 @@ from server_heartbeat import HeartbeatMonitor, Heartbeat
 
 ROOT_PATH = os.path.dirname(__file__)
 GUI_DATA_PATH = os.path.join(ROOT_PATH, 'gui')
+
+@post('/set_cfg')
+def set_cfg():
+    for k, v in request.json.items():
+        print k,v
+        cfg[k] = v
+    return {}
 
 @route('/downloading')
 def downloading():
@@ -36,9 +43,10 @@ def download(game, game_id, mod_id, file_id):
 def status():
     return {
         'running':True,
+        'user':cfg.get('user', ''),
         'username_set':cfg.get('user', '') != '',
         'password_set':cfg.get('password', '') != '',
-        'save_location':cfg['download_location'],
+        'save_location':cfg['save_location'],
     }
 
 @route('/shutdown')
@@ -107,21 +115,33 @@ def _path_to_abs(path):
             path = os.path.join(os.path.expanduser('~'), path)
     return path
 
+def _cfg_path():
+    return os.path.join(ROOT_PATH, 'cfg.json')
+
+def _save_cfg(cfg):
+    with open(_cfg_path(), 'w') as json_fp:
+        json.dump(cfg, json_fp)
+
+def _load_cfg():
+    try:
+        with open(_cfg_path()) as json_fp:
+            cfg = json.load(json_fp)
+    except IOError:
+        logging.warning('No user config')
+        cfg = {
+                'save_location' : '',
+                'user' : '',
+                'password' : '',
+        }
+    cfg['save_location'] = _path_to_abs(cfg.get('save_location', ''))
+    return cfg
+
 class Server(object):
     SHUTDOWN_TIMEOUT = 60
 
     def __init__(self):
-        try:
-            with open(os.path.join(ROOT_PATH, 'cfg.json')) as json_fp:
-                self._cfg = json.load(json_fp)
-        except IOError:
-            logging.warning('No user config')
-            self._cfg = {
-                    'download_location' : '',
-                    'user' : '',
-                    'password' : '',
-            }
-        self._cfg['download_location'] = _path_to_abs(self._cfg.get('download_location', ''))
+
+        self._cfg = _load_cfg()
 
         try:
             with open(os.path.join(ROOT_PATH, 'data.json')) as json_fp:
@@ -136,6 +156,7 @@ class Server(object):
 
     def stop(self):
         self._bottle_server.stop()
+
 
     def _on_heartbeat_timeout(self, heartbeat):
         '''
@@ -153,7 +174,7 @@ class Server(object):
         TODO this needs sorting
         '''
         import shutil
-        save_path = os.path.join(self._cfg['download_location'], file_name)
+        save_path = os.path.join(self._cfg['save_location'], file_name)
         logging.debug('Moving <%s> to <%s>' % (path, save_path,))
         shutil.move(path, save_path)
 
@@ -182,6 +203,9 @@ class Server(object):
 
         self._download_manager.stop()
         hb_monitor.stop()
+        print 'Saving...'
+        print self._cfg['save_location']
+        _save_cfg(self._cfg)
 
 if __name__ == "__main__":
     import doctest
