@@ -7,6 +7,7 @@ import logging.handlers
 import webbrowser
 import time
 import threading
+import multiprocessing
 
 import requests
 
@@ -55,13 +56,10 @@ if __name__ == '__main__':
             req = requests.get('%s/status' % addr)
             req = requests.post('%s/download/%s/%s/%s/%s' % (addr, game, game_id, mod_id, file_id))
         except requests.exceptions.ConnectionError:
-            pid = os.fork()
-            if pid == 0:
-                system_tray_app(addr)
-            else:
-                s = Server()
-                s.start_download(game, game_id, mod_id, file_id)
-                s.start_server(host, port)
+            multiprocessing.Process(target=system_tray_app, args=(addr,)).start()
+            s = Server()
+            s.start_download(game, game_id, mod_id, file_id)
+            s.start_server(host, port)
     else:
         status_uri = '%s/status' % addr
         try:
@@ -73,8 +71,5 @@ if __name__ == '__main__':
             t.daemon = True
             t.start()
 
-            pid = os.fork()
-            if pid == 0:
-                system_tray_app(addr)
-            else:
-                Server().start_server(host, port)
+            multiprocessing.Process(target=system_tray_app, args=(addr,)).start()
+            Server().start_server(host, port)
