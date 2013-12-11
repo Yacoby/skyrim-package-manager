@@ -1,22 +1,25 @@
-from bottle import route, post, run, static_file, install, request
+import sys
 import logging
 import json
 import os
-
 from functools import partial
+
+from bottle import route, post, run, static_file, install, request
 
 from downloader import DownloadManager
 from nxm_register import register_nxm_handler, is_nxm_registered
 from server_adapter import StoppableWSGIRefServer
 from server_heartbeat import HeartbeatMonitor, Heartbeat
 
-ROOT_PATH = os.path.dirname(__file__)
-GUI_DATA_PATH = os.path.join(ROOT_PATH, 'gui')
+if getattr(sys, 'frozen', False):
+    APP_PATH = os.path.dirname(sys.executable)
+elif __file__:
+    APP_PATH = os.path.dirname(__file__)
+GUI_DATA_PATH = os.path.join(APP_PATH, 'gui')
 
 @post('/set_cfg')
 def set_cfg():
     for k, v in request.json.items():
-        print k,v
         cfg[k] = v
     return {}
 
@@ -116,7 +119,7 @@ def _path_to_abs(path):
     return path
 
 def _cfg_path():
-    return os.path.join(ROOT_PATH, 'cfg.json')
+    return os.path.join(APP_PATH, 'cfg.json')
 
 def _save_cfg(cfg):
     with open(_cfg_path(), 'w') as json_fp:
@@ -144,7 +147,7 @@ class Server(object):
         self._cfg = _load_cfg()
 
         try:
-            with open(os.path.join(ROOT_PATH, 'data.json')) as json_fp:
+            with open(os.path.join(APP_PATH, 'data.json')) as json_fp:
                 user_data = json.load(json_fp)
         except IOError:
             logging.warning('No user data')
@@ -203,8 +206,6 @@ class Server(object):
 
         self._download_manager.stop()
         hb_monitor.stop()
-        print 'Saving...'
-        print self._cfg['save_location']
         _save_cfg(self._cfg)
 
 if __name__ == "__main__":

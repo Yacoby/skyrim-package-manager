@@ -33,6 +33,7 @@ def open_when_running(query_url, open_url):
             time.sleep(0.5)
 
 if __name__ == '__main__':
+    #TODO path name problem when frozen
     LOG_FILE = os.path.join(os.path.dirname(__file__), 'log')
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger()
