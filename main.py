@@ -55,10 +55,12 @@ if __name__ == '__main__':
             req = requests.get('%s/status' % addr)
             req = requests.post('%s/download/%s/%s/%s/%s' % (addr, game, game_id, mod_id, file_id))
         except requests.exceptions.ConnectionError:
-            multiprocessing.Process(target=system_tray_app, args=(addr,)).start()
+            p = multiprocessing.Process(target=system_tray_app, args=(addr,))
+            p.start()
             s = Server()
             s.start_download(game, game_id, mod_id, file_id)
             s.start_server(host, port)
+            p.terminate()
     else:
         status_uri = '%s/status' % addr
         try:
@@ -70,5 +72,7 @@ if __name__ == '__main__':
             t.daemon = True
             t.start()
 
-            multiprocessing.Process(target=system_tray_app, args=(addr,)).start()
+            p = multiprocessing.Process(target=system_tray_app, args=(addr,))
+            p.start()
             Server().start_server(host, port)
+            p.terminate()
