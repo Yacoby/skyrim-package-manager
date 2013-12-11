@@ -4,7 +4,7 @@ import json
 import os
 from functools import partial
 
-from bottle import route, post, run, static_file, install, request
+from bottle import route, post, run, static_file, install, request, response
 
 from downloader import DownloadManager
 from nxm_register import register_nxm_handler, is_nxm_registered
@@ -67,10 +67,18 @@ def nxm_register():
 
 @route('/')
 def index():
+    response.set_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.set_header('Pragma', 'no-cache')
+    response.set_header('Expires', '0')
+
     return static_file('index.html', root=GUI_DATA_PATH)
 
 @route('/static/<filepath:path>')
 def server_static(filepath):
+    response.set_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.set_header('Pragma', 'no-cache')
+    response.set_header('Expires', '0')
+
     return static_file(filepath, root=GUI_DATA_PATH)
 
 def local_variable_plugin(to_inject, callback):
