@@ -2,11 +2,6 @@ Skryim Package Manager
 ======================
 
 ###Installing (Arch Linux)
-Copy cfg.json.dist to cfg.json. Add the following
-
-* The location to download the mods to. This can be any path but it must exist
-* Your password and username for the Nexus sites. This isn't required but if you don't add them you can't download any file over 2mb
-
 Install virtualenv and pip then run the following:
 
     $ virtualenv env
@@ -14,7 +9,7 @@ Install virtualenv and pip then run the following:
     $ pip install -r requirements.txt
     $ python main.py
 
-Use the button to set the NXM handler. When finished you can exit the virtual environment using (or just close the terminal):
+Use the button to set the NXM handler ect, When finished you can exit the virtual environment using (or just close the terminal):
 
     $ deactive
 
@@ -31,7 +26,6 @@ Key:
 
 0:
 * Windows binary
-* Better logging
 
 1:
 * Auto download depenecies

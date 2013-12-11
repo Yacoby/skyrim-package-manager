@@ -8,11 +8,13 @@ import webbrowser
 import time
 import threading
 import multiprocessing
+import argparse
 
 import requests
 
 from server import Server
 from system_tray import system_tray_app
+from nxm_register import register_nxm_handler
 
 def parse_nxm(nxm_str):
     data = re.sub(r'^nxm:', '', nxm_str)
@@ -42,13 +44,28 @@ if __name__ == '__main__':
         LOG_FILE, maxBytes=(1048576*5), backupCount=7
     ))
 
+
+    #registering nxm is a feature here to allow for permission elevation
+    parser = argparse.ArgumentParser()
+    parser.add_argument('nxm', nargs='?')
+    parser.add_argument('--regnxm',
+                        dest='regnxm',
+                        action='store_const',
+                        const=True,
+                        default=False)
+    args = parser.parse_args()
+
+    if args.regnxm:
+        register_nxm_handler()
+        sys.exit(0)
+
     host = 'localhost'
     port = 8080
 
     addr = 'http://%s:%d' % (host, port)
     status_uri = '%s/status' % addr
-    if len(sys.argv) > 1:
-        mod_id, file_id = parse_nxm(sys.argv[1])
+    if args.nxm:
+        mod_id, file_id = parse_nxm(args.nxm)
 
         game = 'skyrim'
         game_id = '110'
