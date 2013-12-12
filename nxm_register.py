@@ -14,9 +14,9 @@ NXM_DESKTOP_NAME = 'nxm.desktop'
 
 def _get_run_cmd():
     if getattr(sys, 'frozen', False):
-        return sys.executable
+        return '"%s"' % sys.executable
     else:
-        return sys.executable + ' ' + os.path.abspath(sys.argv[0])
+        return '"%s" "%s"' % (sys.executable, os.path.abspath(sys.argv[0]))
 
 def _get_desktop_file_path():
     app_path = os.path.expanduser('~/.local/share/applications')
@@ -55,7 +55,7 @@ def _register_nxm_handler_windows():
         winreg.SetValue(winreg.HKEY_CLASSES_ROOT,
                         r'nxm\shell\open\command',
                         winreg.REG_SZ,
-                        '"%s" "%%1"' % _get_run_cmd())
+                        '%s "%%1"' % _get_run_cmd())
 
 def register_nxm_handler():
     f = {
@@ -87,7 +87,7 @@ def _is_nxm_registered_windows():
 def is_nxm_registered():
     f = {
             'Linux' : _is_nxm_registered_linux,
-            'Windows' : _register_nxm_handler_windows,
+            'Windows' : _is_nxm_registered_windows,
     }
     return f[platform.system()]()
 
