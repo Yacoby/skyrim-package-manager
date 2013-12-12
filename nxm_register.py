@@ -82,7 +82,12 @@ def _is_nxm_registered_linux():
         return False
 
 def _is_nxm_registered_windows():
-    return False
+    try:
+        with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, r'nxm\shell\open\command'):
+            return _get_run_cmd() in winreg.QueryValue(winreg.HKEY_CLASSES_ROOT, r'nxm\shell\open\command')
+    except WindowsError:
+        return False
+
 
 def is_nxm_registered():
     f = {
