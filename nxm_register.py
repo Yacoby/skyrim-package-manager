@@ -41,21 +41,23 @@ def _register_nxm_handler_windows():
     '''
     TODO why does this know how to start the program :(
     '''
-    if sys.argv[-1] != '--regnxm':
-        script = os.path.abspath(sys.argv[0])
-        params = ' '.join([script] + sys.argv[1:] + ['--regnxm'])
-        shell.ShellExecuteEx(lpVerb='runas', lpFile=sys.executable, lpParameters=params)
-        return
+    try:
+        perms = winreg.KEY_WOW64_64KEY |  winreg.KEY_ALL_ACCESS
+        with winreg.CreateKeyEx(winreg.HKEY_CLASSES_ROOT, r'nxm\DefaultIcon', 0, perms):
+            winreg.SetValue(winreg.HKEY_CLASSES_ROOT, r'nxm\DefaultIcon', winreg.REG_SZ, '')
 
-    perms = winreg.KEY_WOW64_64KEY |  winreg.KEY_ALL_ACCESS
-    with winreg.CreateKeyEx(winreg.HKEY_CLASSES_ROOT, r'nxm\DefaultIcon', 0, perms):
-        winreg.SetValue(winreg.HKEY_CLASSES_ROOT, r'nxm\DefaultIcon', winreg.REG_SZ, '')
-
-    with winreg.CreateKeyEx(winreg.HKEY_CLASSES_ROOT, r'nxm\shell\open\command', 0, perms):
-        winreg.SetValue(winreg.HKEY_CLASSES_ROOT,
-                        r'nxm\shell\open\command',
-                        winreg.REG_SZ,
-                        '%s "%%1"' % _get_run_cmd())
+        with winreg.CreateKeyEx(winreg.HKEY_CLASSES_ROOT, r'nxm\shell\open\command', 0, perms):
+            winreg.SetValue(winreg.HKEY_CLASSES_ROOT,
+                            r'nxm\shell\open\command',
+                            winreg.REG_SZ,
+                            '%s "%%1"' % _get_run_cmd())
+    except WindowsError as e:
+        if sys.argv[-1] != '--regnxm':
+            script = os.path.abspath(sys.argv[0])
+            params = ' '.join([script] + sys.argv[1:] + ['--regnxm'])
+            shell.ShellExecuteEx(lpVerb='runas', lpFile=sys.executable, lpParameters=params)
+        else:
+            raise
 
 def register_nxm_handler():
     f = {
